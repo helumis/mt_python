@@ -1,0 +1,213 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Bar Chart Race - Dynamic Top 10</title>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<style>
+body {
+  font-family: Arial, sans-serif;
+  padding: 20px;
+}
+.axis path, .axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+.labelName {
+  font-weight: bold;
+  text-anchor: end;
+}
+.labelValue {
+  font-weight: bold;
+}
+#controls {
+  margin: 20px 0;
+}
+button {
+  padding: 10px 20px;
+  margin-right: 10px;
+  font-size: 14px;
+  cursor: pointer;
+}
+</style>
+</head>
+<body>
+<h2>Bar Chart Race - 動態前10名 Tags</h2>
+<div id="controls">
+  <button id="playPause">暫停</button>
+  <button id="restart">重新開始</button>
+  <span id="speedLabel">速度: <span id="speedValue">1.0x</span></span>
+  <input type="range" id="speedSlider" min="0.5" max="3" step="0.5" value="1">
+</div>
+<div id="dateLabel" style="font-size:32px; font-weight:bold; margin-bottom:20px; color:#333;"></div>
+<svg width="1000" height="600"></svg>
+
+<script>
+const data = [{"date": "2010-12", "netflix": 5, "cloud-computing": 2, "aws": 2, "videos": 1, "streaming": 1, "scaling": 1, "html5": 1, "open-source": 1, "software-development": 1, "cloud-architecture": 1}, {"date": "2011-01", "netflix": 7, "aws": 2, "cloud-computing": 2, "cassandra": 1, "scaling": 1, "innovation": 1, "technology": 1, "software-development": 1, "datastax": 1, "cloud-architecture": 1}, {"date": "2011-02", "netflix": 7, "cloud-computing": 2, "aws": 2, "netflix-api": 1, "product-management": 1, "videos": 1, "api": 1, "cloud-architecture": 1, "technology": 1, "innovation": 1}, {"date": "2011-03", "netflix": 7, "aws": 4, "cloud-computing": 3, "database": 1, "product-management": 1, "api": 1, "videos": 1, "technology": 1, "cloud-architecture": 1, "cloud": 1}, {"date": "2011-04", "netflix": 8, "aws": 5, "cloud-computing": 4, "database": 1, "product-management": 1, "api": 1, "videos": 1, "technology": 1, "cloud-architecture": 1, "cloud": 1}, {"date": "2011-05", "netflix": 9, "aws": 5, "cloud-computing": 4, "network-performance": 2, "netflix-api": 1, "datastax": 1, "api": 1, "product-management": 1, "videos": 1, "technology": 1}, {"date": "2011-06", "netflix": 10, "aws": 5, "cloud-computing": 4, "api": 2, "network-performance": 2, "netflix-api": 1, "datastax": 1, "product-management": 1, "videos": 1, "technology": 1}, {"date": "2011-07", "netflix": 11, "cloud-computing": 5, "aws": 5, "api": 2, "network-performance": 2, "netflix-api": 1, "open-source": 1, "innovation": 1, "cloud": 1, "cloud-architecture": 1}, {"date": "2011-08", "netflix": 12, "cloud-computing": 5, "aws": 5, "api": 2, "cloud": 2, "network-performance": 2, "cloud-architecture": 2, "nosql": 1, "netflix-api": 1, "innovation": 1}, {"date": "2011-10", "netflix": 13, "aws": 5, "cloud-computing": 5, "network-performance": 3, "api": 2, "cloud-architecture": 2, "cloud": 2, "isp": 2, "streaming-video": 2, "netflix-api": 1}, {"date": "2011-11", "netflix": 13, "aws": 6, "cloud-computing": 5, "cloud-architecture": 4, "cloud": 3, "network-performance": 3, "api": 2, "streaming-video": 2, "isp": 2, "datastax": 2}, {"date": "2011-12", "netflix": 13, "aws": 6, "cloud-computing": 5, "cloud-architecture": 4, "api": 3, "cloud": 3, "network-performance": 3, "streaming-video": 2, "isp": 2, "netflix-api": 2}, {"date": "2012-01", "netflix": 13, "aws": 7, "cloud-computing": 5, "cloud-architecture": 5, "cloud": 4, "network-performance": 3, "api": 3, "hadoop": 2, "streaming-video": 2, "datastax": 2}, {"date": "2012-02", "netflix": 13, "aws": 8, "cloud-computing": 6, "cloud-architecture": 5, "cassandra": 4, "cloud": 4, "api": 4, "network-performance": 3, "streaming-video": 2, "distributed": 2}, {"date": "2012-03", "netflix": 14, "aws": 8, "cloud-computing": 6, "cassandra": 5, "cloud-architecture": 5, "api": 4, "cloud": 4, "network-performance": 3, "streaming-video": 2, "datastax": 2}, {"date": "2012-04", "netflix": 15, "aws": 8, "cloud-computing": 6, "cassandra": 5, "cloud-architecture": 5, "api": 4, "cloud": 4, "network-performance": 3, "isp": 2, "streaming-video": 2}, {"date": "2012-06", "netflix": 16, "aws": 10, "cloud-computing": 7, "cloud-architecture": 7, "cloud": 5, "cassandra": 5, "api": 4, "distributed": 3, "network-performance": 3, "datastax": 2}, {"date": "2012-07", "netflix": 17, "aws": 11, "cloud-computing": 9, "cloud-architecture": 7, "cassandra": 6, "cloud": 6, "api": 5, "network-performance": 3, "open-source": 3, "distributed": 3}, {"date": "2012-09", "netflix": 17, "aws": 11, "cloud-computing": 9, "cloud-architecture": 7, "cassandra": 6, "cloud": 6, "api": 5, "open-source": 4, "recommendations": 3, "network-performance": 3}, {"date": "2012-10", "netflix": 17, "aws": 13, "cloud-computing": 9, "cloud-architecture": 7, "cloud": 6, "cassandra": 6, "api": 5, "fault-tolerance": 4, "open-source": 4, "distributed": 3}, {"date": "2012-11", "netflix": 17, "aws": 14, "cloud-computing": 10, "cloud-architecture": 7, "api": 6, "cassandra": 6, "cloud": 6, "open-source": 5, "fault-tolerance": 5, "distributed": 3}, {"date": "2012-12", "netflix": 17, "aws": 17, "cloud-computing": 10, "cloud-architecture": 8, "api": 7, "cassandra": 6, "cloud": 6, "fault-tolerance": 6, "open-source": 5, "netflix-api": 3}, {"date": "2013-01", "netflix": 19, "aws": 18, "cloud-computing": 11, "cloud-architecture": 11, "api": 8, "fault-tolerance": 7, "cloud": 7, "open-source": 7, "cassandra": 6, "distributed": 5}, {"date": "2013-02", "netflix": 19, "aws": 18, "cloud-computing": 13, "cloud-architecture": 12, "api": 9, "open-source": 8, "cassandra": 7, "cloud": 7, "fault-tolerance": 7, "distributed": 5}, {"date": "2013-03", "netflix": 19, "aws": 19, "cloud-computing": 14, "cloud-architecture": 13, "open-source": 9, "api": 9, "cloud": 8, "cassandra": 8, "fault-tolerance": 7, "distributed": 5}, {"date": "2013-04", "aws": 19, "netflix": 19, "cloud-computing": 14, "cloud-architecture": 13, "api": 9, "open-source": 9, "cassandra": 8, "cloud": 8, "fault-tolerance": 7, "distributed": 5}, {"date": "2013-05", "netflix": 20, "aws": 20, "cloud-computing": 15, "cloud-architecture": 13, "api": 9, "open-source": 9, "cloud": 8, "cassandra": 8, "fault-tolerance": 7, "distributed": 5}, {"date": "2013-06", "aws": 22, "netflix": 20, "cloud-computing": 17, "cloud-architecture": 14, "api": 10, "cloud": 9, "open-source": 9, "cassandra": 8, "fault-tolerance": 7, "distributed": 6}, {"date": "2013-07", "aws": 22, "netflix": 20, "cloud-computing": 18, "cloud-architecture": 14, "api": 10, "cloud": 9, "open-source": 9, "cassandra": 8, "fault-tolerance": 7, "distributed": 6}, {"date": "2013-08", "aws": 22, "netflix": 20, "cloud-computing": 18, "cloud-architecture": 14, "api": 11, "cloud": 9, "open-source": 9, "cassandra": 8, "fault-tolerance": 7, "distributed": 6}, {"date": "2013-09", "aws": 22, "netflix": 20, "cloud-computing": 18, "cloud-architecture": 14, "api": 11, "cloud": 9, "open-source": 9, "cassandra": 8, "fault-tolerance": 7, "distributed": 6}, {"date": "2013-10", "aws": 22, "netflix": 20, "cloud-computing": 18, "cloud-architecture": 14, "api": 11, "cloud": 9, "open-source": 9, "cassandra": 9, "fault-tolerance": 7, "distributed": 6}, {"date": "2013-11", "aws": 23, "netflix": 20, "cloud-computing": 18, "cloud-architecture": 14, "api": 12, "cassandra": 9, "open-source": 9, "cloud": 9, "fault-tolerance": 7, "hadoop": 6}, {"date": "2013-12", "aws": 25, "netflix": 20, "cloud-computing": 18, "cloud-architecture": 14, "api": 12, "cassandra": 11, "open-source": 10, "cloud": 10, "fault-tolerance": 7, "netflixoss": 7}, {"date": "2014-01", "aws": 26, "netflix": 20, "cloud-computing": 18, "cloud-architecture": 14, "api": 12, "cloud": 11, "cassandra": 11, "open-source": 10, "hadoop": 9, "netflixoss": 7}, {"date": "2014-02", "aws": 27, "netflix": 21, "cloud-computing": 18, "cloud-architecture": 14, "api": 12, "cloud": 11, "cassandra": 11, "open-source": 10, "hadoop": 9, "distributed": 7}, {"date": "2014-03", "aws": 27, "netflix": 21, "cloud-computing": 18, "cloud-architecture": 14, "api": 13, "open-source": 11, "cloud": 11, "cassandra": 11, "hadoop": 9, "netflixoss": 8}, {"date": "2014-04", "aws": 27, "netflix": 21, "cloud-computing": 18, "cloud-architecture": 14, "api": 13, "open-source": 11, "cloud": 11, "cassandra": 11, "hadoop": 9, "netflixoss": 8}, {"date": "2014-05", "aws": 27, "netflix": 21, "cloud-computing": 18, "cloud-architecture": 14, "api": 13, "cassandra": 11, "open-source": 11, "cloud": 11, "hadoop": 9, "netflixoss": 8}, {"date": "2014-06", "aws": 28, "netflix": 21, "cloud-computing": 18, "cloud-architecture": 14, "api": 13, "cassandra": 11, "open-source": 11, "cloud": 11, "hadoop": 9, "netflixoss": 8}, {"date": "2014-07", "aws": 29, "netflix": 21, "cloud-computing": 18, "cloud-architecture": 14, "api": 13, "cassandra": 12, "open-source": 11, "cloud": 11, "hadoop": 9, "netflixoss": 8}, {"date": "2014-08", "aws": 29, "netflix": 21, "cloud-computing": 18, "cloud-architecture": 14, "api": 13, "cassandra": 12, "open-source": 11, "cloud": 11, "hadoop": 9, "netflixoss": 8}, {"date": "2014-09", "aws": 29, "netflix": 21, "cloud-computing": 18, "cloud-architecture": 14, "api": 13, "cassandra": 12, "cloud": 11, "open-source": 11, "hadoop": 10, "netflixoss": 8}, {"date": "2014-10", "aws": 30, "netflix": 21, "cloud-computing": 18, "cloud-architecture": 14, "api": 13, "open-source": 12, "cassandra": 12, "hadoop": 11, "cloud": 11, "big-data": 8}, {"date": "2014-11", "aws": 31, "netflix": 21, "cloud-computing": 18, "cloud-architecture": 14, "open-source": 14, "api": 13, "hadoop": 12, "cassandra": 12, "cloud": 11, "netflixoss": 10}, {"date": "2014-12", "aws": 31, "netflix": 21, "cloud-computing": 18, "cloud-architecture": 14, "open-source": 14, "api": 13, "cassandra": 12, "hadoop": 12, "netflixoss": 11, "cloud": 11}, {"date": "2015-01", "aws": 31, "netflix": 22, "cloud-computing": 18, "cloud-architecture": 15, "open-source": 14, "api": 13, "cassandra": 13, "hadoop": 12, "netflixoss": 12, "big-data": 11}, {"date": "2015-02", "aws": 31, "netflix": 22, "cloud-computing": 18, "cloud-architecture": 15, "open-source": 14, "api": 14, "cassandra": 13, "big-data": 13, "netflixoss": 13, "hadoop": 12}, {"date": "2015-03", "aws": 32, "netflix": 23, "cloud-computing": 18, "cloud-architecture": 15, "api": 14, "open-source": 14, "netflixoss": 13, "big-data": 13, "cassandra": 13, "hadoop": 12}, {"date": "2015-04", "aws": 32, "netflix": 23, "cloud-computing": 18, "cloud-architecture": 15, "open-source": 14, "api": 14, "netflixoss": 13, "big-data": 13, "cassandra": 13, "hadoop": 12}, {"date": "2015-05", "aws": 32, "netflix": 23, "cloud-computing": 18, "cloud-architecture": 15, "open-source": 14, "api": 14, "netflixoss": 13, "big-data": 13, "cassandra": 13, "hadoop": 12}, {"date": "2015-06", "aws": 32, "netflix": 23, "cloud-computing": 18, "cloud-architecture": 15, "open-source": 14, "api": 14, "netflixoss": 13, "big-data": 13, "cassandra": 13, "hadoop": 12}, {"date": "2015-07", "aws": 32, "netflix": 23, "cloud-computing": 18, "cloud-architecture": 15, "api": 14, "open-source": 14, "cassandra": 13, "netflixoss": 13, "big-data": 13, "hadoop": 12}, {"date": "2015-08", "aws": 32, "netflix": 23, "cloud-computing": 18, "cloud-architecture": 15, "open-source": 14, "api": 14, "big-data": 13, "cassandra": 13, "netflixoss": 13, "hadoop": 12}, {"date": "2015-09", "aws": 35, "netflix": 23, "cloud-computing": 20, "cloud-architecture": 15, "api": 14, "open-source": 14, "big-data": 13, "cassandra": 13, "netflixoss": 13, "cloud": 12}, {"date": "2015-10", "aws": 36, "netflix": 23, "cloud-computing": 22, "open-source": 15, "cloud-architecture": 15, "api": 14, "big-data": 13, "cassandra": 13, "netflixoss": 13, "hadoop": 12}, {"date": "2015-11", "aws": 37, "netflix": 24, "cloud-computing": 22, "open-source": 16, "cloud-architecture": 15, "netflixoss": 14, "api": 14, "big-data": 13, "cassandra": 13, "netflixsecurity": 13}, {"date": "2015-12", "aws": 37, "netflix": 24, "cloud-computing": 22, "open-source": 16, "cloud-architecture": 15, "api": 14, "netflixoss": 14, "netflixsecurity": 13, "cassandra": 13, "big-data": 13}, {"date": "2016-01", "aws": 38, "netflix": 24, "cloud-computing": 22, "open-source": 16, "cloud-architecture": 15, "api": 14, "netflixoss": 14, "netflixsecurity": 13, "big-data": 13, "cassandra": 13}, {"date": "2016-02", "aws": 38, "netflix": 25, "cloud-computing": 22, "open-source": 16, "cloud-architecture": 15, "big-data": 14, "cassandra": 14, "netflixoss": 14, "api": 14, "netflixsecurity": 13}, {"date": "2016-03", "aws": 40, "netflix": 25, "cloud-computing": 23, "cloud-architecture": 16, "open-source": 16, "api": 14, "cassandra": 14, "cloud": 14, "netflixoss": 14, "big-data": 14}, {"date": "2016-04", "aws": 41, "netflix": 26, "cloud-computing": 25, "open-source": 16, "cloud-architecture": 16, "big-data": 15, "cloud": 14, "api": 14, "netflixoss": 14, "cassandra": 14}, {"date": "2016-05", "aws": 41, "netflix": 27, "cloud-computing": 25, "cloud-architecture": 17, "netflixoss": 16, "open-source": 16, "big-data": 15, "performance": 15, "cassandra": 14, "api": 14}, {"date": "2016-06", "aws": 41, "netflix": 27, "cloud-computing": 25, "cloud-architecture": 18, "open-source": 16, "netflixoss": 16, "big-data": 15, "performance": 15, "cassandra": 14, "cloud": 14}, {"date": "2016-07", "aws": 41, "netflix": 28, "cloud-computing": 25, "cloud-architecture": 19, "open-source": 16, "netflixoss": 16, "big-data": 15, "performance": 15, "cloud": 14, "api": 14}, {"date": "2016-08", "aws": 41, "netflix": 28, "cloud-computing": 25, "cloud-architecture": 20, "netflixoss": 17, "open-source": 16, "big-data": 15, "cloud": 15, "performance": 15, "api": 15}, {"date": "2016-09", "aws": 41, "netflix": 28, "cloud-computing": 25, "cloud-architecture": 20, "open-source": 19, "netflixoss": 18, "cloud": 17, "performance": 16, "api": 15, "cassandra": 15}, {"date": "2016-10", "aws": 41, "netflix": 28, "cloud-computing": 25, "cloud-architecture": 20, "open-source": 20, "netflixoss": 18, "cloud": 17, "performance": 16, "cassandra": 15, "big-data": 15}, {"date": "2016-11", "aws": 42, "netflix": 28, "cloud-computing": 26, "cloud-architecture": 20, "open-source": 20, "cloud": 18, "netflixoss": 18, "performance": 16, "cassandra": 15, "big-data": 15}, {"date": "2016-12", "aws": 42, "netflix": 28, "cloud-computing": 26, "cloud-architecture": 20, "open-source": 20, "netflixoss": 19, "cloud": 18, "performance": 16, "cassandra": 15, "big-data": 15}, {"date": "2017-01", "aws": 42, "netflix": 29, "cloud-computing": 26, "cloud-architecture": 20, "open-source": 20, "netflixoss": 19, "cloud": 18, "performance": 17, "api": 15, "cassandra": 15}, {"date": "2017-02", "aws": 42, "netflix": 29, "cloud-computing": 26, "open-source": 22, "netflixoss": 21, "cloud-architecture": 20, "cloud": 18, "performance": 17, "netflixsecurity": 16, "api": 15}, {"date": "2017-03", "aws": 42, "netflix": 30, "cloud-computing": 27, "open-source": 22, "netflixoss": 21, "cloud-architecture": 20, "cloud": 18, "performance": 17, "netflixsecurity": 17, "api": 15}, {"date": "2017-04", "aws": 43, "netflix": 32, "cloud-computing": 30, "open-source": 22, "netflixoss": 21, "cloud-architecture": 20, "cloud": 18, "netflixsecurity": 17, "performance": 17, "api": 15}, {"date": "2017-05", "aws": 43, "netflix": 34, "cloud-computing": 30, "open-source": 22, "netflixoss": 21, "cloud-architecture": 20, "cloud": 18, "performance": 17, "netflixsecurity": 17, "cassandra": 15}, {"date": "2017-06", "aws": 45, "netflix": 36, "cloud-computing": 30, "open-source": 24, "netflixoss": 21, "cloud-architecture": 20, "netflixsecurity": 18, "cloud": 18, "performance": 17, "big-data": 17}, {"date": "2017-07", "aws": 45, "netflix": 36, "cloud-computing": 30, "open-source": 24, "netflixoss": 23, "cloud-architecture": 20, "netflixsecurity": 19, "cloud": 19, "performance": 17, "big-data": 17}, {"date": "2017-08", "aws": 46, "netflix": 37, "cloud-computing": 30, "open-source": 25, "netflixoss": 23, "netflixsecurity": 20, "cloud-architecture": 20, "cloud": 19, "performance": 17, "big-data": 17}, {"date": "2017-09", "aws": 46, "netflix": 38, "cloud-computing": 30, "open-source": 25, "netflixoss": 23, "cloud-architecture": 20, "netflixsecurity": 20, "cloud": 19, "performance": 18, "big-data": 17}, {"date": "2017-10", "aws": 46, "netflix": 39, "cloud-computing": 30, "open-source": 25, "netflixoss": 23, "netflixsecurity": 20, "cloud-architecture": 20, "cloud": 19, "performance": 18, "api": 17}, {"date": "2017-11", "aws": 46, "netflix": 40, "cloud-computing": 31, "open-source": 26, "netflixoss": 24, "netflixsecurity": 21, "cloud-architecture": 20, "cloud": 20, "performance": 18, "big-data": 17}, {"date": "2017-12", "aws": 46, "netflix": 40, "cloud-computing": 31, "open-source": 26, "netflixoss": 24, "netflixsecurity": 21, "cloud-architecture": 20, "cloud": 20, "performance": 18, "big-data": 17}, {"date": "2018-01", "aws": 46, "netflix": 40, "cloud-computing": 31, "open-source": 26, "netflixoss": 24, "netflixsecurity": 21, "cloud-architecture": 20, "cloud": 20, "big-data": 18, "performance": 18}, {"date": "2018-02", "aws": 46, "netflix": 40, "cloud-computing": 31, "open-source": 26, "netflixoss": 24, "netflixsecurity": 21, "cloud": 20, "cloud-architecture": 20, "performance": 19, "big-data": 18}, {"date": "2018-03", "aws": 47, "netflix": 44, "cloud-computing": 31, "open-source": 26, "netflixoss": 24, "netflixsecurity": 22, "cloud": 20, "cloud-architecture": 20, "big-data": 19, "performance": 19}, {"date": "2018-04", "aws": 47, "netflix": 44, "cloud-computing": 31, "open-source": 26, "netflixoss": 25, "netflixsecurity": 22, "cloud-architecture": 20, "cloud": 20, "performance": 20, "big-data": 19}, {"date": "2018-05", "aws": 47, "netflix": 45, "cloud-computing": 32, "open-source": 27, "netflixoss": 26, "netflixsecurity": 22, "cloud": 20, "cloud-architecture": 20, "performance": 20, "big-data": 19}, {"date": "2018-06", "aws": 47, "netflix": 47, "cloud-computing": 32, "open-source": 27, "netflixoss": 26, "big-data": 22, "netflixsecurity": 22, "performance": 20, "cloud": 20, "cloud-architecture": 20}, {"date": "2018-07", "aws": 50, "netflix": 47, "cloud-computing": 33, "netflixoss": 27, "open-source": 27, "netflixsecurity": 23, "big-data": 22, "performance": 20, "cloud": 20, "cloud-architecture": 20}, {"date": "2018-08", "aws": 51, "netflix": 47, "cloud-computing": 34, "netflixoss": 27, "open-source": 27, "netflixsecurity": 24, "big-data": 23, "cloud": 20, "cloud-architecture": 20, "performance": 20}, {"date": "2018-09", "aws": 51, "netflix": 48, "cloud-computing": 36, "open-source": 27, "netflixoss": 27, "big-data": 24, "netflixsecurity": 24, "data-science": 21, "cloud": 20, "cloud-architecture": 20}, {"date": "2018-10", "aws": 51, "netflix": 49, "cloud-computing": 36, "open-source": 28, "netflixoss": 27, "netflixsecurity": 25, "big-data": 24, "data-science": 21, "cloud": 20, "cloud-architecture": 20}, {"date": "2018-11", "aws": 53, "netflix": 51, "cloud-computing": 38, "netflixoss": 28, "open-source": 28, "netflixsecurity": 27, "big-data": 25, "cloud": 21, "data-science": 21, "cloud-architecture": 20}, {"date": "2018-12", "aws": 54, "netflix": 53, "cloud-computing": 39, "netflixoss": 29, "open-source": 29, "netflixsecurity": 27, "big-data": 25, "data-science": 21, "cloud": 21, "cloud-architecture": 20}, {"date": "2019-01", "aws": 54, "netflix": 53, "cloud-computing": 39, "netflixoss": 29, "open-source": 29, "netflixsecurity": 27, "big-data": 25, "data-science": 23, "cloud": 21, "cloud-architecture": 20}, {"date": "2019-02", "aws": 54, "netflix": 54, "cloud-computing": 39, "netflixoss": 29, "open-source": 29, "netflixsecurity": 27, "big-data": 25, "data-science": 23, "cloud": 21, "performance": 21}, {"date": "2019-03", "aws": 54, "netflix": 54, "cloud-computing": 41, "open-source": 30, "netflixoss": 29, "netflixsecurity": 27, "big-data": 26, "data-science": 24, "performance": 22, "cloud": 21}, {"date": "2019-04", "netflix": 55, "aws": 54, "cloud-computing": 41, "netflixoss": 30, "open-source": 30, "netflixsecurity": 27, "big-data": 26, "data-science": 25, "performance": 22, "cloud": 21}, {"date": "2019-05", "netflix": 55, "aws": 54, "cloud-computing": 41, "netflixoss": 30, "open-source": 30, "netflixsecurity": 27, "data-science": 26, "big-data": 26, "performance": 22, "cloud": 21}, {"date": "2019-06", "netflix": 56, "aws": 54, "cloud-computing": 41, "netflixoss": 30, "open-source": 30, "netflixsecurity": 27, "data-science": 26, "big-data": 26, "performance": 22, "machine-learning": 21}, {"date": "2019-07", "netflix": 58, "aws": 54, "cloud-computing": 41, "netflixoss": 31, "open-source": 31, "netflixsecurity": 27, "data-science": 26, "big-data": 26, "performance": 22, "machine-learning": 21}, {"date": "2019-08", "netflix": 58, "aws": 55, "cloud-computing": 41, "netflixoss": 31, "open-source": 31, "netflixsecurity": 27, "data-science": 26, "big-data": 26, "performance": 22, "machine-learning": 21}, {"date": "2019-09", "netflix": 59, "aws": 55, "cloud-computing": 41, "netflixoss": 31, "open-source": 31, "data-science": 27, "netflixsecurity": 27, "big-data": 26, "performance": 22, "machine-learning": 21}, {"date": "2019-10", "netflix": 61, "aws": 55, "cloud-computing": 41, "netflixoss": 31, "open-source": 31, "data-science": 28, "big-data": 27, "netflixsecurity": 27, "machine-learning": 23, "performance": 22}, {"date": "2019-11", "netflix": 61, "aws": 56, "cloud-computing": 42, "netflixoss": 32, "open-source": 31, "data-science": 28, "netflixsecurity": 28, "big-data": 27, "machine-learning": 23, "performance": 22}, {"date": "2019-12", "netflix": 62, "aws": 56, "cloud-computing": 42, "netflixoss": 32, "open-source": 32, "data-science": 30, "netflixsecurity": 28, "big-data": 27, "machine-learning": 24, "performance": 22}, {"date": "2020-01", "netflix": 62, "aws": 56, "cloud-computing": 42, "netflixoss": 32, "open-source": 32, "data-science": 30, "netflixsecurity": 28, "big-data": 27, "machine-learning": 24, "performance": 22}, {"date": "2020-02", "netflix": 64, "aws": 56, "cloud-computing": 42, "netflixoss": 32, "open-source": 32, "data-science": 30, "netflixsecurity": 28, "big-data": 27, "machine-learning": 25, "performance": 22}, {"date": "2020-03", "netflix": 65, "aws": 56, "cloud-computing": 42, "open-source": 33, "netflixoss": 32, "data-science": 30, "netflixsecurity": 28, "big-data": 27, "machine-learning": 25, "performance": 22}, {"date": "2020-04", "netflix": 67, "aws": 56, "cloud-computing": 42, "open-source": 33, "netflixoss": 32, "data-science": 30, "netflixsecurity": 28, "big-data": 27, "machine-learning": 25, "security": 22}, {"date": "2020-05", "netflix": 68, "aws": 56, "cloud-computing": 42, "open-source": 33, "netflixoss": 32, "data-science": 30, "big-data": 28, "netflixsecurity": 28, "machine-learning": 25, "security": 22}, {"date": "2020-06", "netflix": 68, "aws": 56, "cloud-computing": 42, "open-source": 33, "netflixoss": 32, "data-science": 30, "big-data": 28, "netflixsecurity": 28, "machine-learning": 25, "security": 22}, {"date": "2020-07", "netflix": 69, "aws": 58, "cloud-computing": 42, "open-source": 33, "netflixoss": 32, "data-science": 31, "big-data": 28, "netflixsecurity": 28, "machine-learning": 27, "security": 22}, {"date": "2020-08", "netflix": 72, "aws": 58, "cloud-computing": 42, "open-source": 33, "netflixoss": 32, "data-science": 31, "big-data": 28, "machine-learning": 28, "netflixsecurity": 28, "security": 22}, {"date": "2020-09", "netflix": 75, "aws": 58, "cloud-computing": 42, "data-science": 34, "open-source": 33, "netflixoss": 32, "big-data": 28, "netflixsecurity": 28, "machine-learning": 28, "performance": 22}, {"date": "2020-10", "netflix": 77, "aws": 58, "cloud-computing": 42, "data-science": 35, "open-source": 33, "netflixoss": 32, "big-data": 28, "machine-learning": 28, "netflixsecurity": 28, "security": 22}, {"date": "2020-11", "netflix": 78, "aws": 58, "cloud-computing": 42, "data-science": 35, "open-source": 34, "netflixoss": 32, "netflixsecurity": 28, "machine-learning": 28, "big-data": 28, "performance": 22}, {"date": "2020-12", "netflix": 83, "aws": 58, "cloud-computing": 42, "data-science": 38, "open-source": 35, "netflixoss": 32, "machine-learning": 29, "big-data": 29, "netflixsecurity": 28, "security": 23}, {"date": "2021-01", "netflix": 83, "aws": 58, "cloud-computing": 42, "data-science": 38, "open-source": 35, "netflixoss": 32, "machine-learning": 29, "big-data": 29, "netflixsecurity": 28, "security": 23}, {"date": "2021-02", "netflix": 86, "aws": 58, "cloud-computing": 42, "data-science": 38, "open-source": 36, "netflixoss": 32, "big-data": 29, "machine-learning": 29, "netflixsecurity": 28, "security": 24}, {"date": "2021-03", "netflix": 86, "aws": 59, "cloud-computing": 42, "data-science": 39, "open-source": 36, "netflixoss": 32, "big-data": 30, "machine-learning": 29, "netflixsecurity": 28, "security": 24}, {"date": "2021-04", "netflix": 86, "aws": 59, "cloud-computing": 42, "data-science": 39, "open-source": 36, "netflixoss": 32, "big-data": 31, "machine-learning": 29, "netflixsecurity": 28, "security": 24}, {"date": "2021-05", "netflix": 87, "aws": 59, "cloud-computing": 42, "data-science": 40, "open-source": 36, "netflixoss": 32, "big-data": 31, "machine-learning": 29, "netflixsecurity": 28, "security": 24}, {"date": "2021-06", "netflix": 87, "aws": 59, "cloud-computing": 42, "data-science": 40, "open-source": 36, "big-data": 32, "netflixoss": 32, "machine-learning": 29, "netflixsecurity": 28, "security": 24}, {"date": "2021-07", "netflix": 88, "aws": 59, "cloud-computing": 42, "data-science": 40, "open-source": 36, "big-data": 33, "netflixoss": 32, "machine-learning": 29, "netflixsecurity": 28, "security": 24}, {"date": "2021-08", "netflix": 88, "aws": 59, "cloud-computing": 42, "data-science": 40, "open-source": 36, "big-data": 33, "netflixoss": 32, "machine-learning": 29, "netflixsecurity": 28, "security": 24}, {"date": "2021-09", "netflix": 89, "aws": 59, "cloud-computing": 42, "data-science": 40, "open-source": 36, "big-data": 33, "netflixoss": 32, "machine-learning": 29, "netflixsecurity": 28, "security": 25}, {"date": "2021-10", "netflix": 91, "aws": 59, "cloud-computing": 42, "data-science": 40, "open-source": 38, "big-data": 34, "netflixoss": 32, "machine-learning": 30, "netflixsecurity": 28, "security": 25}, {"date": "2021-11", "netflix": 93, "aws": 59, "cloud-computing": 42, "data-science": 40, "open-source": 38, "big-data": 34, "netflixoss": 32, "machine-learning": 30, "netflixsecurity": 28, "security": 25}, {"date": "2021-12", "netflix": 94, "aws": 60, "cloud-computing": 42, "data-science": 40, "open-source": 38, "big-data": 34, "netflixoss": 32, "machine-learning": 30, "netflixsecurity": 28, "security": 26}, {"date": "2022-01", "netflix": 94, "aws": 60, "cloud-computing": 42, "data-science": 40, "open-source": 38, "big-data": 35, "netflixoss": 32, "machine-learning": 30, "netflixsecurity": 28, "security": 26}, {"date": "2022-02", "netflix": 96, "aws": 60, "cloud-computing": 42, "data-science": 40, "open-source": 38, "big-data": 35, "netflixoss": 32, "machine-learning": 30, "netflixsecurity": 28, "security": 26}, {"date": "2022-04", "netflix": 96, "aws": 60, "cloud-computing": 42, "data-science": 40, "open-source": 38, "big-data": 35, "netflixoss": 32, "machine-learning": 30, "netflixsecurity": 28, "security": 26}, {"date": "2022-05", "netflix": 97, "aws": 60, "cloud-computing": 42, "data-science": 41, "open-source": 38, "big-data": 35, "netflixoss": 32, "machine-learning": 31, "netflixsecurity": 28, "security": 26}, {"date": "2022-06", "netflix": 97, "aws": 60, "cloud-computing": 42, "data-science": 41, "open-source": 38, "big-data": 35, "netflixoss": 32, "machine-learning": 31, "netflixsecurity": 28, "security": 27}, {"date": "2022-07", "netflix": 98, "aws": 60, "cloud-computing": 42, "data-science": 41, "open-source": 38, "big-data": 35, "machine-learning": 32, "netflixoss": 32, "netflixsecurity": 28, "security": 27}, {"date": "2022-08", "netflix": 98, "aws": 60, "cloud-computing": 42, "data-science": 41, "open-source": 38, "big-data": 35, "machine-learning": 32, "netflixoss": 32, "netflixsecurity": 28, "security": 27}, {"date": "2022-09", "netflix": 98, "aws": 60, "cloud-computing": 42, "data-science": 41, "open-source": 38, "big-data": 35, "machine-learning": 34, "netflixoss": 32, "security": 28, "netflixsecurity": 28}, {"date": "2022-10", "netflix": 98, "aws": 60, "cloud-computing": 42, "data-science": 41, "open-source": 38, "machine-learning": 35, "big-data": 35, "netflixoss": 32, "security": 28, "netflixsecurity": 28}, {"date": "2022-11", "netflix": 100, "aws": 60, "cloud-computing": 42, "data-science": 41, "open-source": 38, "machine-learning": 36, "big-data": 35, "netflixoss": 32, "security": 28, "netflixsecurity": 28}, {"date": "2022-12", "netflix": 100, "aws": 60, "cloud-computing": 42, "data-science": 41, "open-source": 38, "machine-learning": 36, "big-data": 35, "netflixoss": 32, "security": 28, "netflixsecurity": 28}, {"date": "2023-01", "netflix": 100, "aws": 60, "data-science": 42, "cloud-computing": 42, "machine-learning": 39, "open-source": 38, "big-data": 35, "netflixoss": 32, "security": 28, "netflixsecurity": 28}, {"date": "2023-02", "netflix": 101, "aws": 60, "data-science": 42, "cloud-computing": 42, "machine-learning": 40, "open-source": 38, "big-data": 35, "netflixoss": 32, "security": 28, "netflixsecurity": 28}, {"date": "2023-03", "netflix": 101, "aws": 60, "data-science": 42, "cloud-computing": 42, "machine-learning": 42, "open-source": 38, "big-data": 35, "netflixoss": 32, "security": 28, "netflixsecurity": 28}, {"date": "2023-04", "netflix": 102, "aws": 60, "data-science": 42, "cloud-computing": 42, "machine-learning": 42, "open-source": 38, "big-data": 35, "netflixoss": 32, "security": 28, "netflixsecurity": 28}, {"date": "2023-05", "netflix": 104, "aws": 60, "cloud-computing": 42, "machine-learning": 42, "data-science": 42, "open-source": 38, "big-data": 35, "netflixoss": 32, "security": 29, "netflixsecurity": 28}, {"date": "2023-06", "netflix": 106, "aws": 60, "machine-learning": 43, "cloud-computing": 42, "data-science": 42, "open-source": 38, "big-data": 35, "netflixoss": 32, "security": 30, "netflixsecurity": 28}, {"date": "2023-08", "netflix": 106, "aws": 60, "machine-learning": 44, "cloud-computing": 43, "data-science": 42, "open-source": 38, "big-data": 35, "netflixoss": 32, "security": 30, "netflixsecurity": 28}, {"date": "2023-10", "netflix": 106, "aws": 60, "machine-learning": 44, "cloud-computing": 43, "data-science": 42, "open-source": 38, "big-data": 35, "netflixoss": 32, "security": 30, "netflixsecurity": 28}, {"date": "2023-11", "netflix": 107, "aws": 60, "machine-learning": 46, "cloud-computing": 43, "data-science": 43, "open-source": 38, "big-data": 36, "netflixoss": 32, "security": 30, "netflixsecurity": 28}, {"date": "2023-12", "netflix": 107, "aws": 60, "machine-learning": 46, "data-science": 44, "cloud-computing": 43, "open-source": 38, "big-data": 36, "netflixoss": 32, "security": 30, "netflixsecurity": 28}, {"date": "2024-01", "netflix": 108, "aws": 60, "machine-learning": 46, "data-science": 44, "cloud-computing": 43, "open-source": 38, "big-data": 36, "netflixoss": 32, "security": 30, "netflixsecurity": 28}, {"date": "2024-02", "netflix": 109, "aws": 60, "machine-learning": 46, "data-science": 45, "cloud-computing": 43, "open-source": 38, "big-data": 36, "netflixoss": 32, "security": 30, "netflixsecurity": 28}, {"date": "2024-03", "netflix": 109, "aws": 60, "machine-learning": 49, "data-science": 46, "cloud-computing": 43, "open-source": 38, "big-data": 36, "netflixoss": 32, "security": 30, "netflixsecurity": 28}, {"date": "2024-04", "netflix": 110, "aws": 60, "machine-learning": 49, "data-science": 46, "cloud-computing": 43, "open-source": 38, "big-data": 36, "netflixoss": 32, "security": 30, "netflixsecurity": 28}, {"date": "2024-06", "netflix": 112, "aws": 60, "machine-learning": 50, "data-science": 48, "cloud-computing": 43, "open-source": 38, "big-data": 36, "netflixoss": 32, "security": 30, "experimentation": 28}, {"date": "2024-07", "netflix": 112, "aws": 60, "machine-learning": 51, "data-science": 48, "cloud-computing": 43, "open-source": 38, "big-data": 36, "netflixoss": 32, "security": 30, "distributed-systems": 29}, {"date": "2024-08", "netflix": 112, "aws": 60, "machine-learning": 53, "data-science": 49, "cloud-computing": 43, "open-source": 38, "big-data": 36, "netflixoss": 32, "security": 30, "experimentation": 29}, {"date": "2024-09", "netflix": 112, "aws": 60, "machine-learning": 53, "data-science": 49, "cloud-computing": 43, "open-source": 38, "big-data": 36, "netflixoss": 32, "security": 30, "distributed-systems": 29}, {"date": "2024-10", "netflix": 112, "aws": 60, "machine-learning": 53, "data-science": 49, "cloud-computing": 43, "open-source": 38, "big-data": 36, "netflixoss": 32, "security": 30, "performance": 30}, {"date": "2024-11", "netflix": 112, "aws": 60, "machine-learning": 53, "data-science": 49, "cloud-computing": 43, "open-source": 38, "big-data": 36, "netflixoss": 32, "security": 30, "distributed-systems": 30}, {"date": "2024-12", "netflix": 113, "aws": 60, "machine-learning": 54, "data-science": 49, "cloud-computing": 43, "open-source": 38, "big-data": 36, "netflixoss": 32, "security": 30, "distributed-systems": 30}, {"date": "2025-01", "netflix": 114, "aws": 60, "machine-learning": 54, "data-science": 49, "cloud-computing": 43, "open-source": 38, "big-data": 36, "netflixoss": 32, "security": 30, "distributed-systems": 30}, {"date": "2025-02", "netflix": 114, "aws": 60, "machine-learning": 54, "data-science": 49, "cloud-computing": 43, "open-source": 38, "big-data": 36, "netflixoss": 32, "distributed-systems": 31, "security": 30}, {"date": "2025-03", "netflix": 116, "aws": 60, "machine-learning": 55, "data-science": 49, "cloud-computing": 43, "open-source": 38, "big-data": 36, "netflixoss": 32, "distributed-systems": 31, "security": 30}, {"date": "2025-04", "netflix": 116, "aws": 60, "machine-learning": 55, "data-science": 49, "cloud-computing": 43, "open-source": 38, "big-data": 36, "netflixoss": 32, "distributed-systems": 31, "security": 30}, {"date": "2025-05", "netflix": 116, "aws": 60, "machine-learning": 56, "data-science": 49, "cloud-computing": 43, "open-source": 38, "big-data": 36, "netflixoss": 32, "distributed-systems": 31, "security": 30}, {"date": "2025-06", "netflix": 116, "aws": 60, "machine-learning": 56, "data-science": 49, "cloud-computing": 43, "open-source": 38, "big-data": 36, "netflixoss": 32, "distributed-systems": 31, "security": 30}, {"date": "2025-07", "netflix": 117, "aws": 60, "machine-learning": 56, "data-science": 49, "cloud-computing": 43, "open-source": 38, "big-data": 36, "netflixoss": 32, "distributed-systems": 31, "security": 30}, {"date": "2025-08", "netflix": 117, "aws": 60, "machine-learning": 59, "data-science": 49, "cloud-computing": 43, "open-source": 38, "big-data": 36, "netflixoss": 32, "distributed-systems": 31, "security": 30}, {"date": "2025-09", "netflix": 117, "aws": 60, "machine-learning": 60, "data-science": 49, "cloud-computing": 43, "open-source": 38, "big-data": 37, "distributed-systems": 33, "netflixoss": 32, "performance": 30}, {"date": "2025-10", "netflix": 118, "aws": 60, "machine-learning": 60, "data-science": 49, "cloud-computing": 43, "big-data": 38, "open-source": 38, "distributed-systems": 34, "netflixoss": 32, "security": 30}, {"date": "NaT", "netflix": 118, "machine-learning": 61, "aws": 60, "data-science": 49, "cloud-computing": 43, "big-data": 38, "open-source": 38, "distributed-systems": 34, "netflixoss": 32, "security": 30}];
+const svg = d3.select("svg");
+const width = +svg.attr("width");
+const height = +svg.attr("height");
+const margin = {top:60, right:200, bottom:50, left:200};
+
+// 收集所有出現過的tags
+const allTags = new Set();
+data.forEach(d => {
+  Object.keys(d).filter(k => k !== 'date').forEach(tag => allTags.add(tag));
+});
+
+const color = d3.scaleOrdinal()
+  .domain([...allTags])
+  .range(d3.schemeTableau10.concat(d3.schemePaired));
+
+const x = d3.scaleLinear().range([margin.left, width - margin.right]);
+const y = d3.scaleBand().range([margin.top, height - margin.bottom]).padding(0.1);
+
+const xAxisGroup = svg.append("g")
+  .attr("class", "axis")
+  .attr("transform", `translate(0,${margin.top - 10})`);
+
+let index = 0;
+let t = 0;
+const steps = 30;
+let baseDuration = 1500;
+let isPlaying = true;
+let animationId = null;
+
+// 控制按鈕
+d3.select("#playPause").on("click", function() {
+  isPlaying = !isPlaying;
+  d3.select(this).text(isPlaying ? "暫停" : "播放");
+});
+
+d3.select("#restart").on("click", function() {
+  index = 0;
+  t = 0;
+  isPlaying = true;
+  d3.select("#playPause").text("暫停");
+});
+
+d3.select("#speedSlider").on("input", function() {
+  const speed = +this.value;
+  d3.select("#speedValue").text(speed.toFixed(1) + "x");
+  baseDuration = 1500 / speed;
+});
+
+function getTop10Tags(dataPoint) {
+  return Object.keys(dataPoint)
+    .filter(k => k !== 'date')
+    .map(tag => ({tag, value: dataPoint[tag] || 0}))
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 10);
+}
+
+function interpolate(a, b, alpha) {
+  const result = {};
+  const allKeys = new Set([...Object.keys(a), ...Object.keys(b)]);
+  allKeys.forEach(tag => {
+    if (tag === 'date') return;
+    const valA = a[tag] || 0;
+    const valB = b[tag] || 0;
+    result[tag] = valA + (valB - valA) * alpha;
+  });
+  return result;
+}
+
+function step() {
+  if (!isPlaying) {
+    animationId = requestAnimationFrame(step);
+    return;
+  }
+
+  const current = data[index];
+  const nextIndex = (index + 1) % data.length;
+  const next = data[nextIndex];
+  const alpha = t / steps;
+  
+  const frameData = interpolate(current, next, alpha);
+  
+  const top10 = getTop10Tags(frameData);
+  const sortedTags = top10.map(d => d.tag);
+  
+  y.domain(sortedTags);
+  const maxValue = d3.max(top10, d => d.value);
+  x.domain([0, maxValue * 1.1]);
+
+  // 更新 x 軸
+  xAxisGroup.transition().duration(50).call(d3.axisTop(x).ticks(5));
+
+  // 更新長條
+  const bars = svg.selectAll("rect").data(sortedTags, d => d);
+  
+  bars.enter()
+    .append("rect")
+    .attr("y", d => y(d))
+    .attr("height", y.bandwidth())
+    .attr("x", margin.left)
+    .attr("width", 0)
+    .attr("fill", d => color(d))
+    .merge(bars)
+    .transition().duration(50)
+    .attr("y", d => y(d))
+    .attr("height", y.bandwidth())
+    .attr("x", margin.left)
+    .attr("width", d => Math.max(0, x(frameData[d] || 0) - margin.left));
+  
+  bars.exit()
+    .transition().duration(50)
+    .attr("width", 0)
+    .remove();
+
+  // 更新標籤名稱（左側）
+  const labelsName = svg.selectAll(".labelName").data(sortedTags, d => d);
+  
+  labelsName.enter()
+    .append("text")
+    .attr("class", "labelName")
+    .attr("x", margin.left - 10)
+    .attr("y", d => y(d) + y.bandwidth() / 2)
+    .attr("dy", "0.35em")
+    .style("font-size", "14px")
+    .text(d => d)
+    .merge(labelsName)
+    .transition().duration(50)
+    .attr("y", d => y(d) + y.bandwidth() / 2);
+  
+  labelsName.exit().remove();
+
+  // 更新數值標籤（右側）
+  const labelsValue = svg.selectAll(".labelValue").data(sortedTags, d => d);
+  
+  labelsValue.enter()
+    .append("text")
+    .attr("class", "labelValue")
+    .attr("x", d => x(frameData[d] || 0) + 10)
+    .attr("y", d => y(d) + y.bandwidth() / 2)
+    .attr("dy", "0.35em")
+    .style("font-size", "14px")
+    .text(d => Math.round(frameData[d] || 0))
+    .merge(labelsValue)
+    .transition().duration(50)
+    .attr("x", d => x(frameData[d] || 0) + 10)
+    .attr("y", d => y(d) + y.bandwidth() / 2)
+    .text(d => Math.round(frameData[d] || 0));
+  
+  labelsValue.exit().remove();
+
+  // 更新日期顯示
+  d3.select("#dateLabel").text(next.date);
+
+  t += 1;
+  if (t > steps) {
+    t = 0;
+    index = nextIndex;
+  }
+  
+  animationId = requestAnimationFrame(step);
+}
+
+step();
+</script>
+</body>
+</html>
